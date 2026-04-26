@@ -30,11 +30,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'q or fdcId required' });
     }
 
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${apiKey}&query=${encodeURIComponent(q)}&pageSize=20&dataType=SR%20Legacy,Foundation,Branded`;
-    const response = await fetch(url);
-    const data = await response.json();
+    const words = q.trim().split(/\s+/);
+    let rawFoods;
 
-    const results = (data.foods ?? []).map((food) => {
+    if (words.length > 1) {
+      // Run the full query plus a brand-focused search on the first word in parallel,
+      // then merge and re-rank by how many query terms appear in description + brand.
+      const [mainRes, brandRes] = await Promise.all([
+        usdaSearch(q, apiKey),
+        usdaSearch(words[0], apiKey),
+      ]);
+
+      const seen = new Set(mainRes.map((f) => f.fdcId));
+      const merged = [...mainRes];
+      for (const f of brandRes) {
+        if (!seen.has(f.fdcId)) {
+          merged.push(f);
+          seen.add(f.fdcId);
+        }
+      }
+
+      const lowerWords = words.map((w) => w.toLowerCase());
+      rawFoods = merged
+        .map((f) => {
+          const text = `${f.description} ${f.brandOwner ?? ''}`.toLowerCase();
+          const hits = lowerWords.filter((w) => text.includes(w)).length;
+          return { ...f, _hits: hits };
+        })
+        .sort((a, b) => b._hits - a._hits)
+        .slice(0, 20);
+    } else {
+      rawFoods = await usdaSearch(q, apiKey);
+    }
+
+    const results = rawFoods.map((food) => {
       const carbNutrient = food.foodNutrients?.find(
         (n) => n.nutrientName === 'Carbohydrate, by difference'
       );
@@ -51,4 +80,11 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
+}
+
+async function usdaSearch(query, apiKey) {
+  const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${apiKey}&query=${encodeURIComponent(query)}&pageSize=20&dataType=SR%20Legacy,Foundation,Branded`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.foods ?? [];
 }
