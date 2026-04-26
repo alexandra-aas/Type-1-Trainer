@@ -17,3 +17,13 @@ export async function scanPhoto({ imageBase64, mimeType }) {
   if (!res.ok) throw new Error('Claude photo scan failed');
   return res.json();
 }
+
+export async function scoreMeal(payload) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ type: 'meal_score', payload }),
+  });
+  if (!res.ok) throw new Error('Claude meal score failed');
+  return res.json();
+}

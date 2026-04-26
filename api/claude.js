@@ -58,6 +58,37 @@ Return ONLY valid JSON:
         ],
       },
     ];
+  } else if (type === 'meal_score') {
+    const { foods, totalCarbsG, currentBg, bgTrend, schedule, mealTime, insulinType, recentHistory } = payload;
+    systemPrompt =
+      'You are a Type 1 diabetes nutrition coach. Score meals for glucose impact using all clinical context provided. Always respond with valid JSON only — no markdown, no explanation.';
+    const trendStr = bgTrend === 'rising' ? 'rising ↑' : bgTrend === 'falling' ? 'falling ↓' : 'stable →';
+    messages = [
+      {
+        role: 'user',
+        content: `Score this meal for a child with Type 1 diabetes.
+
+Meal (${mealTime ?? 'now'}):
+${foods.map((f) => `- ${f.name}: ${f.carbsG}g carbs`).join('\n')}
+Total carbs: ${totalCarbsG}g
+
+Clinical context:
+- Current BG: ${currentBg != null ? `${currentBg} mg/dL (${trendStr})` : 'unknown'}
+- Insulin type: ${insulinType ?? 'lispro'} (peaks ~1.5 hrs)
+- Today's schedule: ${schedule || 'No activities'}
+- Recent food-BG history (7 days): ${recentHistory || 'No history yet'}
+
+Return ONLY valid JSON:
+{
+  "glucoseImpactScore": <1-10, where 1=minimal spike, 10=severe spike risk>,
+  "macroBalance": <"protein-heavy"|"carb-heavy"|"fat-heavy"|"balanced">,
+  "prebolusMinutes": <recommended minutes to pre-bolus insulin, 0-30>,
+  "peakRiskTime": <"e.g. 1:30 PM" — estimated BG peak based on meal time + insulin peak>,
+  "tip": "<one actionable sentence for the parent>",
+  "activityNote": "<how today's scheduled activity affects this meal, or null>"
+}`,
+      },
+    ];
   } else {
     return res.status(400).json({ error: 'Unknown type' });
   }
