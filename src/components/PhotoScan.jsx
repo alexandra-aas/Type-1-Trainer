@@ -4,11 +4,11 @@ import { resizeImageToBase64 } from '../lib/imageResize';
 import { saveMeal } from '../lib/storage';
 import Spinner from './Spinner';
 
-export default function PhotoScan({ showToast, onDone }) {
+export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [mealLabel, setMealLabel] = useState('snack');
+  const [mealLabel, setMealLabel] = useState(initialMealLabel ?? 'snack');
   const [foodName, setFoodName] = useState('');
   const fileRef = useRef();
 
@@ -53,12 +53,18 @@ export default function PhotoScan({ showToast, onDone }) {
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  const inline = !!initialMealLabel;
+
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">Scan Nutrition Label</h1>
-      <p className="text-sm text-gray-400">
-        Take a photo or upload an image of a nutrition facts label — Claude will extract the carb info.
-      </p>
+    <div className={inline ? 'space-y-3' : 'p-4 space-y-4'}>
+      {!inline && (
+        <>
+          <h1 className="text-xl font-bold text-gray-900">Scan Nutrition Label</h1>
+          <p className="text-sm text-gray-400">
+            Take a photo or upload an image of a nutrition facts label — Claude will extract the carb info.
+          </p>
+        </>
+      )}
 
       {!preview && (
         <button
@@ -135,20 +141,22 @@ export default function PhotoScan({ showToast, onDone }) {
               />
             </div>
 
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Log as</label>
-              <select
-                value={mealLabel}
-                onChange={(e) => setMealLabel(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="breakfast">Breakfast</option>
-                <option value="snack">Morning Snack</option>
-                <option value="lunch">Lunch</option>
-                <option value="afterschool">After-School</option>
-                <option value="dinner">Dinner</option>
-              </select>
-            </div>
+            {!inline && (
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Log as</label>
+                <select
+                  value={mealLabel}
+                  onChange={(e) => setMealLabel(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="breakfast">Breakfast</option>
+                  <option value="snack">Morning Snack</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="afterschool">After-School</option>
+                  <option value="dinner">Dinner</option>
+                </select>
+              </div>
+            )}
 
             <button
               onClick={handleLog}

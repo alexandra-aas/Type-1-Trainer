@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getTodayLog, updateMeal } from '../lib/storage';
 import FoodSearch from './FoodSearch';
 import FavoritesShelf from './FavoritesShelf';
+import PhotoScan from './PhotoScan';
 
 const MEAL_SLOTS = [
   { id: 'breakfast', label: 'Breakfast', icon: '🌅' },
@@ -110,37 +111,35 @@ export default function MealLog({ showToast }) {
                 ))}
 
                 {/* Entry mode toggle */}
-                <div className="flex gap-2 bg-white rounded-xl p-1">
-                  <button
-                    onClick={() => setEntryMode('search')}
-                    className={`flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors ${
-                      entryMode === 'search' ? 'bg-green-600 text-white' : 'text-gray-500'
-                    }`}
-                  >
-                    USDA Search
-                  </button>
-                  <button
-                    onClick={() => setEntryMode('favorites')}
-                    className={`flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors ${
-                      entryMode === 'favorites' ? 'bg-green-600 text-white' : 'text-gray-500'
-                    }`}
-                  >
-                    Favorites
-                  </button>
+                <div className="flex gap-1 bg-white rounded-xl p-1">
+                  {[
+                    { id: 'search', label: 'USDA Search' },
+                    { id: 'favorites', label: 'Favorites' },
+                    { id: 'scan', label: '📷 Scan' },
+                  ].map((mode) => (
+                    <button
+                      key={mode.id}
+                      onClick={() => setEntryMode(mode.id)}
+                      className={`flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors ${
+                        entryMode === mode.id ? 'bg-green-600 text-white' : 'text-gray-500'
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
                 </div>
 
                 {entryMode === 'search' && (
-                  <FoodSearch
-                    mealLabel={slot.id}
-                    onLogged={refresh}
-                    showToast={showToast}
-                  />
+                  <FoodSearch mealLabel={slot.id} onLogged={refresh} showToast={showToast} />
                 )}
                 {entryMode === 'favorites' && (
-                  <FavoritesShelf
-                    mealLabel={slot.id}
-                    onLogged={refresh}
+                  <FavoritesShelf mealLabel={slot.id} onLogged={refresh} showToast={showToast} />
+                )}
+                {entryMode === 'scan' && (
+                  <PhotoScan
+                    initialMealLabel={slot.id}
                     showToast={showToast}
+                    onDone={() => { refresh(); setEntryMode('search'); }}
                   />
                 )}
               </div>
