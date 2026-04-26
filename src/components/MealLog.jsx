@@ -16,6 +16,8 @@ const MEAL_SLOTS = [
   { id: 'dinner', label: 'Dinner', icon: '🍽️' },
   { id: 'evening', label: 'Evening Snack', icon: '🌙' },
 ];
+const QUICK_SNACK = { id: 'quicksnack', label: 'Quick Snack', icon: '🍪' };
+const ALL_SLOTS = [...MEAL_SLOTS, QUICK_SNACK];
 
 const TODAY_DAY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
 
@@ -107,7 +109,8 @@ export default function MealLog({ showToast }) {
     setAddingToSlot(null);
   }
 
-  const addingSlot = MEAL_SLOTS.find((s) => s.id === addingToSlot);
+  const quickSnacks = todayLog.meals.filter((m) => m.label === 'quicksnack');
+  const addingSlot = ALL_SLOTS.find((s) => s.id === addingToSlot);
 
   return (
     <div className="p-4 space-y-4">
@@ -236,6 +239,37 @@ export default function MealLog({ showToast }) {
         );
       })}
 
+      {/* Quick snacks */}
+      <div className="border border-dashed border-gray-200 rounded-2xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">🍪 Quick Snacks</span>
+          <button
+            onClick={() => openAddSheet('quicksnack')}
+            className="text-xs bg-green-600 text-white font-medium px-3 py-1 rounded-full hover:bg-green-700"
+          >
+            + Add snack
+          </button>
+        </div>
+        {quickSnacks.length === 0 && (
+          <p className="text-xs text-gray-400 text-center py-1">
+            Tap "+ Add snack" to log an unplanned snack with a timestamp.
+          </p>
+        )}
+        {quickSnacks.map((meal) => (
+          <div key={meal.id} className="bg-white rounded-xl px-3 py-2 flex items-start justify-between gap-2">
+            <div className="space-y-0.5 flex-1">
+              {meal.foods?.map((f, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-gray-700">{f.name}</span>
+                  <span className="text-gray-500 font-medium">{f.carbsG}g</span>
+                </div>
+              ))}
+            </div>
+            <span className="text-xs text-gray-400 shrink-0 mt-0.5">{meal.time}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Food entry overlay */}
       {addingToSlot && (
         <div className="fixed inset-0 bg-black/40 flex items-end z-40" onClick={closeAddSheet}>
@@ -250,7 +284,8 @@ export default function MealLog({ showToast }) {
                   {addingSlot?.icon} Add to {addingSlot?.label}
                 </h2>
                 {(() => {
-                  const total = (mealsBySlot[addingToSlot] ?? []).reduce((s, m) => s + (m.totalCarbsG ?? 0), 0);
+                  const entries = addingToSlot === 'quicksnack' ? quickSnacks : (mealsBySlot[addingToSlot] ?? []);
+                  const total = entries.reduce((s, m) => s + (m.totalCarbsG ?? 0), 0);
                   return total > 0 ? (
                     <p className="text-xs text-gray-400 mt-0.5">{total}g carbs logged so far</p>
                   ) : null;
