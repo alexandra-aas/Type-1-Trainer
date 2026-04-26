@@ -51,7 +51,7 @@ export default function WeeklySchedule({ onClose, showToast }) {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-900">Weekly Schedule</h2>
-          <button onClick={handleSave} className="text-green-600 font-semibold text-sm">Save</button>
+          <button onClick={handleSave} className="text-red-600 font-semibold text-sm">Save</button>
         </div>
 
         <div className="overflow-y-auto flex-1 space-y-4 pr-1">
@@ -63,15 +63,15 @@ export default function WeeklySchedule({ onClose, showToast }) {
                 {(schedule[day] ?? []).map((act, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full"
+                    className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 text-xs px-2 py-1 rounded-full"
                   >
                     {act.name}
                     {act.time && (
-                      <span className="text-green-500 font-medium">{fmt12(act.time)}</span>
+                      <span className="text-red-500 font-medium">{fmt12(act.time)}</span>
                     )}
                     <button
                       onClick={() => removeActivity(day, i)}
-                      className="text-green-400 hover:text-red-500 ml-0.5"
+                      className="text-red-400 hover:text-red-500 ml-0.5"
                     >
                       ×
                     </button>
@@ -86,13 +86,13 @@ export default function WeeklySchedule({ onClose, showToast }) {
                   onChange={(e) => setInput(day, 'name', e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addActivity(day)}
                   placeholder="Activity…"
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="time"
                   value={inputs[day].time}
                   onChange={(e) => setInput(day, 'time', e.target.value)}
-                  className="w-28 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-28 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <button
                   onClick={() => addActivity(day)}

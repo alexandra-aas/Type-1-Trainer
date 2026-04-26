@@ -58,6 +58,33 @@ Return ONLY valid JSON:
         ],
       },
     ];
+  } else if (type === 'dexcom_scan') {
+    const { imageBase64, mimeType } = payload;
+    systemPrompt =
+      'You read Dexcom CGM screenshots. Always respond with valid JSON only — no markdown, no explanation.';
+    messages = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: mimeType, data: imageBase64 },
+          },
+          {
+            type: 'text',
+            text: `Read this Dexcom CGM screenshot and extract glucose data.
+Return ONLY valid JSON:
+{
+  "currentBg": <current glucose number shown large on screen>,
+  "trendArrow": <"rising_fast"|"rising"|"stable"|"falling"|"falling_fast">,
+  "unit": <"mg/dL" or "mmol/L">,
+  "visibleReadings": [<any other numeric glucose values visible, in order, most recent first>]
+}
+If you cannot confidently read a value, use null.`,
+          },
+        ],
+      },
+    ];
   } else if (type === 'meal_score') {
     const { foods, totalCarbsG, currentBg, bgTrend, schedule, mealTime, insulinType, recentHistory } = payload;
     systemPrompt =

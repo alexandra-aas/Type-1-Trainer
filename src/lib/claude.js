@@ -18,6 +18,16 @@ export async function scanPhoto({ imageBase64, mimeType }) {
   return res.json();
 }
 
+export async function scanDexcom({ imageBase64, mimeType }) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ type: 'dexcom_scan', payload: { imageBase64, mimeType } }),
+  });
+  if (!res.ok) throw new Error('Dexcom scan failed');
+  return res.json();
+}
+
 export async function scoreMeal(payload) {
   const res = await fetch('/api/claude', {
     method: 'POST',

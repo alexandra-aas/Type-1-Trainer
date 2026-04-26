@@ -60,12 +60,12 @@ export default function FoodSearch({ mealLabel, onLogged, showToast }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search foods…"
-          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium disabled:bg-green-300"
+          className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-medium disabled:bg-red-300"
         >
           {loading ? <Spinner size="sm" /> : 'Search'}
         </button>
@@ -89,13 +89,13 @@ export default function FoodSearch({ mealLabel, onLogged, showToast }) {
               />
               <span className="text-xs text-gray-400">g</span>
               {carbs != null && (
-                <span className="text-sm font-bold text-green-700 ml-auto">{carbs}g carbs</span>
+                <span className="text-sm font-bold text-red-700 ml-auto">{carbs}g carbs</span>
               )}
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => handleLog(food)}
-                className="flex-1 bg-green-600 text-white text-xs font-medium py-1.5 rounded-lg"
+                className="flex-1 bg-red-600 text-white text-xs font-medium py-1.5 rounded-lg"
               >
                 Log
               </button>

@@ -44,5 +44,5 @@ export function formatBgSummary(readings, targetRange = [70, 180]) {
 export function bgColor(value, low = 70, high = 180) {
   if (value < low) return 'text-red-600';
   if (value > high) return 'text-amber-500';
-  return 'text-green-600';
+  return 'text-red-600';
 }

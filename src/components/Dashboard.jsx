@@ -49,7 +49,7 @@ export default function Dashboard({ onNavigate, showToast }) {
           <span className="text-sm font-medium text-gray-500">Blood Glucose</span>
           <button
             onClick={() => setShowBGEntry(true)}
-            className="text-xs text-green-600 font-medium"
+            className="text-xs text-red-600 font-medium"
           >
             + Add reading
           </button>
@@ -82,7 +82,7 @@ export default function Dashboard({ onNavigate, showToast }) {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-500">Today's Meals</span>
-          <button onClick={() => onNavigate('log')} className="text-xs text-green-600 font-medium">
+          <button onClick={() => onNavigate('log')} className="text-xs text-red-600 font-medium">
             View all
           </button>
         </div>
@@ -102,7 +102,7 @@ export default function Dashboard({ onNavigate, showToast }) {
       {/* Plan the day CTA */}
       <button
         onClick={() => setShowPlanner(true)}
-        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-2xl text-base shadow transition-colors"
+        className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 rounded-2xl text-base shadow transition-colors"
       >
         Plan today's meals ✨
       </button>
@@ -118,12 +118,12 @@ export default function Dashboard({ onNavigate, showToast }) {
           <div className="text-xs text-gray-400">USDA search or favorites</div>
         </button>
         <button
-          onClick={() => onNavigate('scan')}
+          onClick={() => onNavigate('favorites')}
           className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-left"
         >
-          <div className="text-2xl mb-1">📷</div>
-          <div className="text-sm font-medium text-gray-700">Scan a label</div>
-          <div className="text-xs text-gray-400">Photo nutrition scan</div>
+          <div className="text-2xl mb-1">⭐</div>
+          <div className="text-sm font-medium text-gray-700">Favorites</div>
+          <div className="text-xs text-gray-400">One-tap from saved foods</div>
         </button>
       </div>
 

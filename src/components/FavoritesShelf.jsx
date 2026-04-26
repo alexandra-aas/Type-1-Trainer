@@ -61,7 +61,7 @@ export default function FavoritesShelf({ mealLabel, onLogged, showToast, standal
             <div>
               <p className="text-sm font-medium text-gray-800 leading-tight line-clamp-2">{food.name}</p>
               {carbs != null && (
-                <p className="text-xs text-green-700 font-bold mt-0.5">
+                <p className="text-xs text-red-700 font-bold mt-0.5">
                   {carbs}g carbs / {food.servingG ?? 100}g
                 </p>
               )}
@@ -69,7 +69,7 @@ export default function FavoritesShelf({ mealLabel, onLogged, showToast, standal
             <div className="flex gap-1">
               <button
                 onClick={() => handleLog(food)}
-                className="flex-1 bg-green-600 text-white text-xs font-medium py-1.5 rounded-lg"
+                className="flex-1 bg-red-600 text-white text-xs font-medium py-1.5 rounded-lg"
               >
                 Log
               </button>
@@ -104,7 +104,7 @@ export default function FavoritesShelf({ mealLabel, onLogged, showToast, standal
               onClick={() => setSelectedMeal(opt.id)}
               className={`text-xs px-3 py-1.5 rounded-full font-medium border transition-colors ${
                 selectedMeal === opt.id
-                  ? 'bg-green-600 text-white border-green-600'
+                  ? 'bg-red-600 text-white border-red-600'
                   : 'bg-white text-gray-600 border-gray-200'
               }`}
             >

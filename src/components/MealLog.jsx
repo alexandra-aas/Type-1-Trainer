@@ -28,7 +28,7 @@ function fmt12(time24) {
 }
 
 function scoreColor(s) {
-  if (s <= 3) return 'text-green-700 bg-green-50 border-green-200';
+  if (s <= 3) return 'text-emerald-700 bg-emerald-50 border-emerald-200';
   if (s <= 6) return 'text-amber-700 bg-amber-50 border-amber-200';
   return 'text-red-700 bg-red-50 border-red-200';
 }
@@ -136,7 +136,7 @@ export default function MealLog({ showToast }) {
                 <span className="text-xl">{slot.icon}</span>
                 <span className="font-medium text-gray-800">{slot.label}</span>
                 {meals.length > 0 && (
-                  <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full font-medium">
+                  <span className="text-xs text-red-700 bg-red-50 px-2 py-0.5 rounded-full font-medium">
                     {totalCarbs}g carbs
                   </span>
                 )}
@@ -155,7 +155,15 @@ export default function MealLog({ showToast }) {
                 {meals.length === 0 && (
                   <p className="text-sm text-gray-400 text-center py-2">Nothing logged yet</p>
                 )}
-                {meals.map((meal) => (
+                {meals.map((meal) => {
+                  const prebolusMin = meal.eatenAt && meal.time
+                    ? (() => {
+                        const [lh, lm] = meal.time.split(':').map(Number);
+                        const [eh, em] = meal.eatenAt.split(':').map(Number);
+                        return (eh * 60 + em) - (lh * 60 + lm);
+                      })()
+                    : null;
+                  return (
                   <div key={meal.id} className="bg-white rounded-xl p-3 space-y-1.5">
                     {meal.foods?.map((f, i) => (
                       <div key={i} className="flex justify-between text-sm">
@@ -166,7 +174,36 @@ export default function MealLog({ showToast }) {
                     {meal.aiSuggested && (
                       <span className="text-xs text-purple-500">✨ AI suggested</span>
                     )}
-                    <div className="flex items-center gap-2 pt-1">
+
+                    {/* Timing row */}
+                    <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                      <span className="text-xs text-gray-400">Bolused {meal.time}</span>
+                      {meal.eatenAt ? (
+                        <>
+                          <span className="text-xs text-gray-300">·</span>
+                          <span className="text-xs text-gray-400">Ate {meal.eatenAt}</span>
+                          {prebolusMin != null && prebolusMin > 0 && (
+                            <>
+                              <span className="text-xs text-gray-300">·</span>
+                              <span className="text-xs font-medium text-blue-600">{prebolusMin}min pre-bolus</span>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            updateMeal(meal.id, { eatenAt: new Date().toTimeString().slice(0, 5) });
+                            refresh();
+                          }}
+                          className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full"
+                        >
+                          Mark as eaten
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Post-meal BG */}
+                    <div className="flex items-center gap-2 pt-0.5">
                       <span className="text-xs text-gray-400">Post-meal BG:</span>
                       {meal.bgAfter ? (
                         <span className="text-xs font-bold text-gray-700">{meal.bgAfter} mg/dL</span>
@@ -181,7 +218,7 @@ export default function MealLog({ showToast }) {
                           />
                           <button
                             onClick={() => handleBgAfter(meal.id, bgAfterInput[meal.id])}
-                            className="text-xs text-green-600 font-medium"
+                            className="text-xs text-red-600 font-medium"
                           >
                             Save
                           </button>
@@ -189,7 +226,8 @@ export default function MealLog({ showToast }) {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
 
                 {/* Score card */}
                 {score && (
@@ -215,7 +253,7 @@ export default function MealLog({ showToast }) {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => openAddSheet(slot.id)}
-                    className="flex-1 bg-green-600 text-white text-sm font-semibold py-2 rounded-xl hover:bg-green-700 transition-colors"
+                    className="flex-1 bg-red-600 text-white text-sm font-semibold py-2 rounded-xl hover:bg-red-700 transition-colors"
                   >
                     + Add food
                   </button>
@@ -245,7 +283,7 @@ export default function MealLog({ showToast }) {
           <span className="text-sm font-medium text-gray-600">🍪 Quick Snacks</span>
           <button
             onClick={() => openAddSheet('quicksnack')}
-            className="text-xs bg-green-600 text-white font-medium px-3 py-1 rounded-full hover:bg-green-700"
+            className="text-xs bg-red-600 text-white font-medium px-3 py-1 rounded-full hover:bg-red-700"
           >
             + Add snack
           </button>

@@ -71,14 +71,14 @@ export default function Settings({ showToast }) {
                 type="number"
                 value={form.targetRange[0]}
                 onChange={(e) => handleRangeChange(0, e.target.value)}
-                className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <span className="text-gray-400">–</span>
               <input
                 type="number"
                 value={form.targetRange[1]}
                 onChange={(e) => handleRangeChange(1, e.target.value)}
-                className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
           </Field>
@@ -105,7 +105,7 @@ export default function Settings({ showToast }) {
 
         <button
           type="submit"
-          className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl"
+          className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl"
         >
           Save settings
         </button>
@@ -150,7 +150,7 @@ export default function Settings({ showToast }) {
 }
 
 const inputClass =
-  'w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500';
+  'w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500';
 
 function Section({ title, children }) {
   return (

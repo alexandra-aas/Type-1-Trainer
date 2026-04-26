@@ -85,7 +85,7 @@ export default function MorningPlanner({ readings, settings, onClose, showToast 
                   type="text"
                   value={scheduleToday}
                   onChange={(e) => setScheduleToday(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   placeholder="e.g. School, Soccer 4pm"
                 />
               </div>
@@ -98,7 +98,7 @@ export default function MorningPlanner({ readings, settings, onClose, showToast 
                   value={specialNotes}
                   onChange={(e) => setSpecialNotes(e.target.value)}
                   rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                   placeholder="e.g. Birthday party at 4pm, he'll probably have cake"
                 />
               </div>
@@ -106,7 +106,7 @@ export default function MorningPlanner({ readings, settings, onClose, showToast 
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
               >
                 {loading ? (
                   <>
@@ -145,7 +145,7 @@ export default function MorningPlanner({ readings, settings, onClose, showToast 
                             <span className="text-xs font-medium text-gray-500">{s.carbsG}g</span>
                             <button
                               onClick={() => logMeal(key, s)}
-                              className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full"
+                              className="text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded-full"
                             >
                               Log
                             </button>

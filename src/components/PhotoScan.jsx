@@ -69,7 +69,7 @@ export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
       {!preview && (
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-gray-300 rounded-2xl py-12 flex flex-col items-center gap-3 text-gray-400 hover:border-green-400 hover:text-green-600 transition-colors"
+          className="w-full border-2 border-dashed border-gray-300 rounded-2xl py-12 flex flex-col items-center gap-3 text-gray-400 hover:border-red-400 hover:text-red-600 transition-colors"
         >
           <span className="text-5xl">📷</span>
           <span className="text-sm font-medium">Tap to take photo or upload</span>
@@ -137,7 +137,7 @@ export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
                 value={foodName}
                 onChange={(e) => setFoodName(e.target.value)}
                 placeholder="e.g. Nature Valley Bar"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
 
@@ -147,7 +147,7 @@ export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
                 <select
                   value={mealLabel}
                   onChange={(e) => setMealLabel(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="breakfast">Breakfast</option>
                   <option value="snack">Morning Snack</option>
@@ -162,7 +162,7 @@ export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
 
             <button
               onClick={handleLog}
-              className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl"
+              className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl"
             >
               Log {result.totalCarbsG != null ? `(${result.totalCarbsG}g carbs)` : 'meal'}
             </button>
@@ -177,7 +177,7 @@ function ResultRow({ label, value, highlight }) {
   return (
     <div className="bg-white rounded-xl p-2">
       <div className="text-xs text-gray-400">{label}</div>
-      <div className={`text-sm font-bold ${highlight ? 'text-green-700' : 'text-gray-800'}`}>
+      <div className={`text-sm font-bold ${highlight ? 'text-red-700' : 'text-gray-800'}`}>
         {value}
       </div>
     </div>
