@@ -44,7 +44,7 @@ export default function MorningPlanner({ readings, settings, onClose, showToast 
       setPlan(result);
       setStep('plan');
     } catch (err) {
-      showToast('Could not get meal plan — check your API key', 'error');
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }

@@ -42,8 +42,8 @@ export default function BGEntry({ onClose, showToast }) {
       const data = await scanDexcom({ imageBase64: base64, mimeType });
       setScanResult(data);
       if (data.currentBg) setValue(String(data.currentBg));
-    } catch {
-      showToast('Could not read screenshot — check Claude API key', 'error');
+    } catch (err) {
+      showToast(err.message, 'error');
     } finally {
       setScanning(false);
     }

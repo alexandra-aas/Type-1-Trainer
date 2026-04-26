@@ -1,39 +1,32 @@
-export async function getMealPlan({ bgSummary, schedule, specialNotes, foodHistory }) {
+async function claudePost(type, payload) {
   const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'meal_plan', payload: { bgSummary, schedule, specialNotes, foodHistory } }),
+    body: JSON.stringify({ type, payload }),
   });
-  if (!res.ok) throw new Error('Claude meal plan failed');
+  if (!res.ok) {
+    let msg = `Claude error ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body.error) msg = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+    } catch {}
+    throw new Error(msg);
+  }
   return res.json();
+}
+
+export async function getMealPlan({ bgSummary, schedule, specialNotes, foodHistory }) {
+  return claudePost('meal_plan', { bgSummary, schedule, specialNotes, foodHistory });
 }
 
 export async function scanPhoto({ imageBase64, mimeType }) {
-  const res = await fetch('/api/claude', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'photo_scan', payload: { imageBase64, mimeType } }),
-  });
-  if (!res.ok) throw new Error('Claude photo scan failed');
-  return res.json();
+  return claudePost('photo_scan', { imageBase64, mimeType });
 }
 
 export async function scanDexcom({ imageBase64, mimeType }) {
-  const res = await fetch('/api/claude', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'dexcom_scan', payload: { imageBase64, mimeType } }),
-  });
-  if (!res.ok) throw new Error('Dexcom scan failed');
-  return res.json();
+  return claudePost('dexcom_scan', { imageBase64, mimeType });
 }
 
 export async function scoreMeal(payload) {
-  const res = await fetch('/api/claude', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ type: 'meal_score', payload }),
-  });
-  if (!res.ok) throw new Error('Claude meal score failed');
-  return res.json();
+  return claudePost('meal_score', payload);
 }

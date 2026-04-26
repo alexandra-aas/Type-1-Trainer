@@ -26,7 +26,7 @@ export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
       setResult(data);
       setFoodName('');
     } catch (err) {
-      showToast('Photo scan failed — check Claude API key', 'error');
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }

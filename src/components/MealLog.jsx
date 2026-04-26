@@ -110,8 +110,8 @@ export default function MealLog({ showToast }) {
         recentHistory: getFoodHistorySummary(7),
       });
       setSlotScores((p) => ({ ...p, [slotId]: result }));
-    } catch {
-      showToast('Could not score meal — check Claude API key', 'error');
+    } catch (err) {
+      showToast(err.message, 'error');
     } finally {
       setScoringSlot(null);
     }
