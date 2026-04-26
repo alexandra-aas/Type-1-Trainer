@@ -154,6 +154,7 @@ export default function PhotoScan({ showToast, onDone, initialMealLabel }) {
                   <option value="lunch">Lunch</option>
                   <option value="afterschool">After-School</option>
                   <option value="dinner">Dinner</option>
+                  <option value="evening">Evening Snack</option>
                 </select>
               </div>
             )}

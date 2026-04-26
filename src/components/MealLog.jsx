@@ -14,6 +14,7 @@ const MEAL_SLOTS = [
   { id: 'lunch', label: 'Lunch', icon: '🥗' },
   { id: 'afterschool', label: 'After-School', icon: '🎒' },
   { id: 'dinner', label: 'Dinner', icon: '🍽️' },
+  { id: 'evening', label: 'Evening Snack', icon: '🌙' },
 ];
 
 const TODAY_DAY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];

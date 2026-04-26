@@ -8,6 +8,7 @@ const MEAL_OPTIONS = [
   { id: 'lunch', label: 'Lunch' },
   { id: 'afterschool', label: 'After-School' },
   { id: 'dinner', label: 'Dinner' },
+  { id: 'evening', label: 'Evening Snack' },
 ];
 
 export default function FavoritesShelf({ mealLabel, onLogged, showToast, standalone, onNavigateLog }) {
