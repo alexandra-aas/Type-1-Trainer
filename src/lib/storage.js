@@ -109,7 +109,7 @@ export function saveSchedule(schedule) {
 
 // Settings
 export function getSettings() {
-  return get(KEYS.settings) ?? { childName: '', usdaApiKey: '', unitSystem: 'mg/dL', targetRange: [70, 180] };
+  return get(KEYS.settings) ?? { childName: '', unitSystem: 'mg/dL', targetRange: [70, 180] };
 }
 export function saveSettings(settings) {
   set(KEYS.settings, settings);

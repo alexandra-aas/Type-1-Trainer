@@ -5,7 +5,6 @@ import WeeklySchedule from './WeeklySchedule';
 export default function Settings({ showToast }) {
   const [form, setForm] = useState({
     childName: '',
-    usdaApiKey: '',
     unitSystem: 'mg/dL',
     targetRange: [70, 180],
   });
@@ -85,21 +84,8 @@ export default function Settings({ showToast }) {
         </Section>
 
         <Section title="API Keys">
-          <Field
-            label="USDA API Key"
-            hint="Free at fdc.nal.usda.gov — required for food search"
-          >
-            <input
-              type="text"
-              value={form.usdaApiKey}
-              onChange={(e) => handleChange('usdaApiKey', e.target.value)}
-              placeholder="Paste your USDA key"
-              className={inputClass}
-              autoComplete="off"
-            />
-          </Field>
-          <p className="text-xs text-gray-400">
-            The Claude (Anthropic) API key is set server-side in Vercel — you don't enter it here.
+          <p className="text-xs text-gray-500">
+            Both the USDA and Claude (Anthropic) API keys are configured server-side in Vercel — no keys needed here.
           </p>
         </Section>
 

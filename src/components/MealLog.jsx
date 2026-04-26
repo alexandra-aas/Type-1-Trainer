@@ -18,7 +18,6 @@ const MEAL_SLOTS = [
 ];
 const QUICK_SNACK = { id: 'quicksnack', label: 'Quick Snack', icon: '🍪' };
 const ALL_SLOTS = [...MEAL_SLOTS, QUICK_SNACK];
-
 const TODAY_DAY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
 
 function fmt12(time24) {
@@ -33,17 +32,24 @@ function scoreColor(s) {
   return 'text-red-700 bg-red-50 border-red-200';
 }
 
+function minsApart(t1, t2) {
+  const [h1, m1] = t1.split(':').map(Number);
+  const [h2, m2] = t2.split(':').map(Number);
+  return (h2 * 60 + m2) - (h1 * 60 + m1);
+}
+
 export default function MealLog({ showToast }) {
   const [todayLog, setTodayLog] = useState({ meals: [] });
+  const [bgReadings, setBgReadings] = useState([]);
   const [activeSlot, setActiveSlot] = useState(null);
   const [addingToSlot, setAddingToSlot] = useState(null);
   const [entryMode, setEntryMode] = useState('search');
-  const [bgAfterInput, setBgAfterInput] = useState({});
   const [slotScores, setSlotScores] = useState({});
   const [scoringSlot, setScoringSlot] = useState(null);
 
   function refresh() {
     setTodayLog(getTodayLog());
+    setBgReadings(getBgReadings());
   }
 
   useEffect(() => { refresh(); }, []);
@@ -53,13 +59,31 @@ export default function MealLog({ showToast }) {
     return acc;
   }, {});
 
-  function handleBgAfter(mealId, value) {
-    const num = parseInt(value, 10);
-    if (!num || num < 20 || num > 600) return;
-    updateMeal(mealId, { bgAfter: num });
+  function markSlotEaten(slotId) {
+    const now = new Date().toTimeString().slice(0, 5);
+    (mealsBySlot[slotId] ?? []).forEach((m) => updateMeal(m.id, { eatenAt: now }));
     refresh();
-    showToast('Post-meal BG saved');
-    setBgAfterInput((p) => ({ ...p, [mealId]: '' }));
+  }
+
+  // Auto-detect post-meal BG: look for readings 60–150 min after eating
+  function getAutoPostMealBg(slotId) {
+    const meals = mealsBySlot[slotId] ?? [];
+    if (!meals.length) return null;
+    const referenceTime = meals.find((m) => m.eatenAt)?.eatenAt ?? meals[0]?.time;
+    if (!referenceTime) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const refMs = new Date(`${today}T${referenceTime}:00`).getTime();
+    const windowStart = refMs + 60 * 60 * 1000;
+    const windowEnd = refMs + 150 * 60 * 1000;
+    const nowMs = Date.now();
+    if (nowMs < windowStart) return { status: 'early', readyAt: new Date(windowStart) };
+    const hits = bgReadings.filter((r) => {
+      const ts = new Date(r.ts).getTime();
+      return ts >= windowStart && ts <= windowEnd;
+    });
+    if (!hits.length) return { status: 'missing' };
+    const peak = hits.reduce((best, r) => (r.value > best.value ? r : best));
+    return { status: 'found', value: peak.value, unit: peak.unit ?? 'mg/dL' };
   }
 
   async function handleScore(slotId) {
@@ -67,29 +91,23 @@ export default function MealLog({ showToast }) {
     if (!meals.length) return;
     setScoringSlot(slotId);
     try {
-      const readings = getBgReadings();
       const settings = getSettings();
-      const last24 = getLast24h(readings);
+      const last24 = getLast24h(bgReadings);
       const latest = getLatestReading(last24);
       const trend = getTrend(last24);
       const schedule = getSchedule();
       const activities = (schedule[TODAY_DAY] ?? [])
         .map((a) => (a.time ? `${a.name} at ${fmt12(a.time)}` : a.name))
         .join(', ');
-      const allFoods = meals.flatMap((m) => m.foods ?? []);
-      const totalCarbsG = meals.reduce((s, m) => s + (m.totalCarbsG ?? 0), 0);
-      const mealTime = meals[0]?.time;
-      const recentHistory = getFoodHistorySummary(7);
-
       const result = await scoreMeal({
-        foods: allFoods,
-        totalCarbsG,
+        foods: meals.flatMap((m) => m.foods ?? []),
+        totalCarbsG: meals.reduce((s, m) => s + (m.totalCarbsG ?? 0), 0),
         currentBg: latest?.value ?? null,
         bgTrend: trend,
         schedule: activities || 'No activities',
-        mealTime,
+        mealTime: meals[0]?.time,
         insulinType: settings.insulinType ?? 'lispro',
-        recentHistory,
+        recentHistory: getFoodHistorySummary(7),
       });
       setSlotScores((p) => ({ ...p, [slotId]: result }));
     } catch {
@@ -99,15 +117,8 @@ export default function MealLog({ showToast }) {
     }
   }
 
-  function openAddSheet(slotId) {
-    setAddingToSlot(slotId);
-    setEntryMode('search');
-  }
-
-  function closeAddSheet() {
-    refresh();
-    setAddingToSlot(null);
-  }
+  function openAddSheet(slotId) { setAddingToSlot(slotId); setEntryMode('search'); }
+  function closeAddSheet() { refresh(); setAddingToSlot(null); }
 
   const quickSnacks = todayLog.meals.filter((m) => m.label === 'quicksnack');
   const addingSlot = ALL_SLOTS.find((s) => s.id === addingToSlot);
@@ -125,9 +136,14 @@ export default function MealLog({ showToast }) {
         const isOpen = activeSlot === slot.id;
         const score = slotScores[slot.id];
 
+        // Slot-level timing
+        const bolusedAt = meals.length ? meals.reduce((e, m) => m.time < e ? m.time : e, meals[0].time) : null;
+        const eatenAt = meals.find((m) => m.eatenAt)?.eatenAt ?? null;
+        const prebolusMin = bolusedAt && eatenAt ? minsApart(bolusedAt, eatenAt) : null;
+        const postMealBg = meals.length ? getAutoPostMealBg(slot.id) : null;
+
         return (
           <div key={slot.id} className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
-            {/* Slot header */}
             <button
               onClick={() => setActiveSlot(isOpen ? null : slot.id)}
               className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
@@ -151,50 +167,50 @@ export default function MealLog({ showToast }) {
 
             {isOpen && (
               <div className="border-t border-gray-100 p-3 space-y-3 bg-gray-50">
-                {/* Logged food entries */}
                 {meals.length === 0 && (
                   <p className="text-sm text-gray-400 text-center py-2">Nothing logged yet</p>
                 )}
-                {meals.map((meal) => {
-                  const prebolusMin = meal.eatenAt && meal.time
-                    ? (() => {
-                        const [lh, lm] = meal.time.split(':').map(Number);
-                        const [eh, em] = meal.eatenAt.split(':').map(Number);
-                        return (eh * 60 + em) - (lh * 60 + lm);
-                      })()
-                    : null;
-                  return (
-                  <div key={meal.id} className="bg-white rounded-xl p-3 space-y-1.5">
-                    {meal.foods?.map((f, i) => (
-                      <div key={i} className="flex justify-between text-sm">
-                        <span className="text-gray-700">{f.name}</span>
-                        <span className="text-gray-500 font-medium">{f.carbsG}g</span>
-                      </div>
-                    ))}
-                    {meal.aiSuggested && (
-                      <span className="text-xs text-purple-500">✨ AI suggested</span>
-                    )}
 
-                    {/* Timing row */}
-                    <div className="flex items-center gap-2 pt-0.5 flex-wrap">
-                      <span className="text-xs text-gray-400">Bolused {meal.time}</span>
-                      {meal.eatenAt ? (
+                {/* Clean food list */}
+                {meals.length > 0 && (
+                  <div className="bg-white rounded-xl overflow-hidden divide-y divide-gray-50">
+                    {meals.flatMap((meal) =>
+                      (meal.foods ?? []).map((f, i) => (
+                        <div key={`${meal.id}-${i}`} className="flex justify-between text-sm px-3 py-2">
+                          <span className="text-gray-700">{f.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500 font-medium">{f.carbsG}g</span>
+                            {meal.aiSuggested && i === 0 && (
+                              <span className="text-xs text-purple-400">✨</span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Slot-level timing + post-meal BG */}
+                {meals.length > 0 && (
+                  <div className="bg-white rounded-xl px-3 py-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {bolusedAt && (
+                        <span className="text-xs text-gray-500">⏱ Bolused {fmt12(bolusedAt)}</span>
+                      )}
+                      {eatenAt ? (
                         <>
                           <span className="text-xs text-gray-300">·</span>
-                          <span className="text-xs text-gray-400">Ate {meal.eatenAt}</span>
+                          <span className="text-xs text-gray-500">Ate {fmt12(eatenAt)}</span>
                           {prebolusMin != null && prebolusMin > 0 && (
                             <>
                               <span className="text-xs text-gray-300">·</span>
-                              <span className="text-xs font-medium text-blue-600">{prebolusMin}min pre-bolus</span>
+                              <span className="text-xs font-semibold text-blue-600">{prebolusMin}min pre-bolus</span>
                             </>
                           )}
                         </>
                       ) : (
                         <button
-                          onClick={() => {
-                            updateMeal(meal.id, { eatenAt: new Date().toTimeString().slice(0, 5) });
-                            refresh();
-                          }}
+                          onClick={() => markSlotEaten(slot.id)}
                           className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full"
                         >
                           Mark as eaten
@@ -202,32 +218,24 @@ export default function MealLog({ showToast }) {
                       )}
                     </div>
 
-                    {/* Post-meal BG */}
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <span className="text-xs text-gray-400">Post-meal BG:</span>
-                      {meal.bgAfter ? (
-                        <span className="text-xs font-bold text-gray-700">{meal.bgAfter} mg/dL</span>
-                      ) : (
-                        <div className="flex gap-1">
-                          <input
-                            type="number"
-                            value={bgAfterInput[meal.id] ?? ''}
-                            onChange={(e) => setBgAfterInput((p) => ({ ...p, [meal.id]: e.target.value }))}
-                            placeholder="e.g. 154"
-                            className="w-20 border border-gray-200 rounded-lg px-2 py-0.5 text-xs focus:outline-none"
-                          />
-                          <button
-                            onClick={() => handleBgAfter(meal.id, bgAfterInput[meal.id])}
-                            className="text-xs text-red-600 font-medium"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    {/* Auto post-meal BG */}
+                    {postMealBg?.status === 'found' && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-gray-400">📈 Post-meal BG:</span>
+                        <span className="text-xs font-bold text-gray-800">{postMealBg.value} {postMealBg.unit}</span>
+                        <span className="text-xs text-gray-400">(auto)</span>
+                      </div>
+                    )}
+                    {postMealBg?.status === 'early' && (
+                      <p className="text-xs text-gray-400">
+                        📈 Post-meal BG available after {postMealBg.readyAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                      </p>
+                    )}
+                    {postMealBg?.status === 'missing' && eatenAt && (
+                      <p className="text-xs text-gray-400">📈 No BG reading found 1–2.5h after eating — add one manually</p>
+                    )}
                   </div>
-                  );
-                })}
+                )}
 
                 {/* Score card */}
                 {score && (
@@ -263,11 +271,7 @@ export default function MealLog({ showToast }) {
                       disabled={scoringSlot === slot.id}
                       className="flex-1 border border-gray-200 bg-white text-sm font-medium py-2 rounded-xl text-gray-600 hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
-                      {scoringSlot === slot.id ? (
-                        <><Spinner size="sm" /> Scoring…</>
-                      ) : (
-                        '✨ Score meal'
-                      )}
+                      {scoringSlot === slot.id ? <><Spinner size="sm" /> Scoring…</> : '✨ Score meal'}
                     </button>
                   )}
                 </div>
@@ -303,7 +307,7 @@ export default function MealLog({ showToast }) {
                 </div>
               ))}
             </div>
-            <span className="text-xs text-gray-400 shrink-0 mt-0.5">{meal.time}</span>
+            <span className="text-xs text-gray-400 shrink-0 mt-0.5">{fmt12(meal.time)}</span>
           </div>
         ))}
       </div>
@@ -315,7 +319,6 @@ export default function MealLog({ showToast }) {
             className="bg-white w-full max-w-lg mx-auto rounded-t-2xl flex flex-col max-h-[88vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Sheet header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
@@ -337,7 +340,6 @@ export default function MealLog({ showToast }) {
               </button>
             </div>
 
-            {/* Mode tabs */}
             <div className="flex gap-1 mx-5 bg-gray-100 rounded-xl p-1 mb-3">
               {[
                 { id: 'search', label: 'USDA Search' },
@@ -356,21 +358,12 @@ export default function MealLog({ showToast }) {
               ))}
             </div>
 
-            {/* Mode content */}
             <div className="overflow-y-auto flex-1 px-5 pb-6">
               {entryMode === 'search' && (
-                <FoodSearch
-                  mealLabel={addingToSlot}
-                  onLogged={refresh}
-                  showToast={showToast}
-                />
+                <FoodSearch mealLabel={addingToSlot} onLogged={refresh} showToast={showToast} />
               )}
               {entryMode === 'favorites' && (
-                <FavoritesShelf
-                  mealLabel={addingToSlot}
-                  onLogged={refresh}
-                  showToast={showToast}
-                />
+                <FavoritesShelf mealLabel={addingToSlot} onLogged={refresh} showToast={showToast} />
               )}
               {entryMode === 'scan' && (
                 <PhotoScan
