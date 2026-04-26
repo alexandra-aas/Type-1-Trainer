@@ -2,26 +2,35 @@ import { useState, useEffect } from 'react';
 import { getFavorites, removeFavorite, saveMeal } from '../lib/storage';
 import { carbsForServing } from '../lib/usda';
 
-export default function FavoritesShelf({ mealLabel, onLogged, showToast }) {
+const MEAL_OPTIONS = [
+  { id: 'breakfast', label: 'Breakfast' },
+  { id: 'snack', label: 'Morning Snack' },
+  { id: 'lunch', label: 'Lunch' },
+  { id: 'afterschool', label: 'After-School' },
+  { id: 'dinner', label: 'Dinner' },
+];
+
+export default function FavoritesShelf({ mealLabel, onLogged, showToast, standalone, onNavigateLog }) {
   const [favorites, setFavorites] = useState([]);
+  const [selectedMeal, setSelectedMeal] = useState(mealLabel ?? 'snack');
 
   function refresh() {
     setFavorites(getFavorites());
   }
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  useEffect(() => { refresh(); }, []);
+
+  const logTarget = mealLabel ?? selectedMeal;
 
   function handleLog(food) {
     const carbsG = carbsForServing(food, food.servingG ?? 100) ?? 0;
     saveMeal({
-      label: mealLabel ?? 'snack',
+      label: logTarget,
       time: new Date().toTimeString().slice(0, 5),
       foods: [{ name: food.name, carbsG, servingG: food.servingG }],
       totalCarbsG: carbsG,
     });
-    showToast(`${food.name} logged`);
+    showToast(`${food.name} logged to ${MEAL_OPTIONS.find((m) => m.id === logTarget)?.label ?? logTarget}`);
     onLogged?.();
   }
 
@@ -30,24 +39,22 @@ export default function FavoritesShelf({ mealLabel, onLogged, showToast }) {
     refresh();
   }
 
-  if (!favorites.length) {
-    return (
-      <div className="text-center py-8 text-gray-400">
-        <p className="text-3xl mb-2">⭐</p>
-        <p className="text-sm">No favorites yet.</p>
-        <p className="text-xs mt-1">Search USDA foods and tap "Favorite" to save them here.</p>
-      </div>
-    );
-  }
+  const empty = (
+    <div className="text-center py-12 text-gray-400">
+      <p className="text-4xl mb-3">⭐</p>
+      <p className="text-sm font-medium text-gray-500">No favorites yet</p>
+      <p className="text-xs mt-1">Search USDA foods and tap "Favorite" to save them here.</p>
+    </div>
+  );
 
-  return (
+  const grid = (
     <div className="grid grid-cols-2 gap-2">
       {favorites.map((food) => {
         const carbs = carbsForServing(food, food.servingG ?? 100);
         return (
           <div
             key={food.id}
-            className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex flex-col justify-between gap-2"
+            className="bg-white border border-gray-100 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-sm"
           >
             <div>
               <p className="text-sm font-medium text-gray-800 leading-tight line-clamp-2">{food.name}</p>
@@ -74,6 +81,38 @@ export default function FavoritesShelf({ mealLabel, onLogged, showToast }) {
           </div>
         );
       })}
+    </div>
+  );
+
+  if (!standalone) {
+    return favorites.length ? grid : empty;
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      <h1 className="text-xl font-bold text-gray-900">Favorites</h1>
+
+      {/* Meal picker */}
+      <div>
+        <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Log to</label>
+        <div className="flex gap-1 flex-wrap">
+          {MEAL_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setSelectedMeal(opt.id)}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium border transition-colors ${
+                selectedMeal === opt.id
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'bg-white text-gray-600 border-gray-200'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {favorites.length ? grid : empty}
     </div>
   );
 }

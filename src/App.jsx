@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import Dashboard from './components/Dashboard';
 import MealLog from './components/MealLog';
-import PhotoScan from './components/PhotoScan';
+import FavoritesShelf from './components/FavoritesShelf';
 import Settings from './components/Settings';
 import Toast from './components/Toast';
 
 const TABS = [
   { id: 'home', label: 'Home', icon: '🏠' },
   { id: 'log', label: 'Log', icon: '📋' },
-  { id: 'scan', label: 'Scan', icon: '📷' },
+  { id: 'favorites', label: 'Favorites', icon: '⭐' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -30,8 +30,8 @@ export default function App() {
         {activeTab === 'log' && (
           <MealLog showToast={showToast} />
         )}
-        {activeTab === 'scan' && (
-          <PhotoScan showToast={showToast} onDone={() => setActiveTab('log')} />
+        {activeTab === 'favorites' && (
+          <FavoritesShelf standalone showToast={showToast} onNavigateLog={() => setActiveTab('log')} />
         )}
         {activeTab === 'settings' && (
           <Settings showToast={showToast} />

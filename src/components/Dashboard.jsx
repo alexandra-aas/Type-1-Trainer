@@ -29,7 +29,8 @@ export default function Dashboard({ onNavigate, showToast }) {
 
   const trendArrow = trend === 'rising' ? '↑' : trend === 'falling' ? '↓' : '→';
   const totalCarbsToday = todayLog.meals.reduce((s, m) => s + (m.totalCarbsG ?? 0), 0);
-  const mealCount = todayLog.meals.length;
+  const mealCount = new Set(todayLog.meals.map((m) => m.label)).size;
+  const itemCount = todayLog.meals.length;
 
   return (
     <div className="p-4 space-y-4">
@@ -91,7 +92,7 @@ export default function Dashboard({ onNavigate, showToast }) {
               <span className="text-3xl font-bold text-gray-900">{totalCarbsToday}g</span>
               <span className="text-sm text-gray-400 ml-1">carbs</span>
             </div>
-            <span className="text-sm text-gray-400">{mealCount} meal{mealCount !== 1 ? 's' : ''} logged</span>
+            <span className="text-sm text-gray-400">{itemCount} item{itemCount !== 1 ? 's' : ''} across {mealCount} meal{mealCount !== 1 ? 's' : ''}</span>
           </div>
         ) : (
           <p className="text-gray-400 text-sm">No meals logged yet today.</p>
