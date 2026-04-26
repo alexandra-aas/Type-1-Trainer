@@ -86,18 +86,22 @@ export function removeFavorite(id) {
 }
 
 // Weekly schedule
+// Activities are stored as { name: string, time: string } objects.
+// Migrates legacy string entries on read.
+function migrateSchedule(raw) {
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const out = {};
+  days.forEach((d) => {
+    out[d] = (raw[d] ?? []).map((a) =>
+      typeof a === 'string' ? { name: a, time: '' } : a
+    );
+  });
+  return out;
+}
+
 export function getSchedule() {
-  return (
-    get(KEYS.schedule) ?? {
-      mon: [],
-      tue: [],
-      wed: [],
-      thu: [],
-      fri: [],
-      sat: [],
-      sun: [],
-    }
-  );
+  const raw = get(KEYS.schedule);
+  return raw ? migrateSchedule(raw) : { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 }
 export function saveSchedule(schedule) {
   set(KEYS.schedule, schedule);

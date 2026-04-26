@@ -6,6 +6,12 @@ import { getSchedule, saveMeal } from '../lib/storage';
 import Spinner from './Spinner';
 
 const TODAY_DAY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
+
+function fmt12(time24) {
+  if (!time24) return '';
+  const [h, m] = time24.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')}${h >= 12 ? 'pm' : 'am'}`;
+}
 const MEAL_LABELS = { breakfast: 'Breakfast', snack: 'Snack', lunch: 'Lunch' };
 
 export default function MorningPlanner({ readings, settings, onClose, showToast }) {
@@ -18,7 +24,10 @@ export default function MorningPlanner({ readings, settings, onClose, showToast 
   useEffect(() => {
     const schedule = getSchedule();
     const activities = schedule[TODAY_DAY] ?? [];
-    setScheduleToday(activities.join(', ') || 'No scheduled activities');
+    const formatted = activities
+      .map((a) => (a.time ? `${a.name} at ${fmt12(a.time)}` : a.name))
+      .join(', ');
+    setScheduleToday(formatted || 'No scheduled activities');
   }, []);
 
   async function handleGenerate() {

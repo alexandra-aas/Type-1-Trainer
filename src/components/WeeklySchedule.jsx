@@ -3,30 +3,38 @@ import { getSchedule, saveSchedule } from '../lib/storage';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+const EMPTY_INPUT = { name: '', time: '' };
+
+function fmt12(time24) {
+  if (!time24) return '';
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')}${ampm}`;
+}
 
 export default function WeeklySchedule({ onClose, showToast }) {
   const [schedule, setSchedule] = useState({});
-  const [inputs, setInputs] = useState({});
+  const [inputs, setInputs] = useState(() =>
+    Object.fromEntries(DAYS.map((d) => [d, { ...EMPTY_INPUT }]))
+  );
 
   useEffect(() => {
-    const s = getSchedule();
-    setSchedule(s);
-    const init = {};
-    DAYS.forEach((d) => { init[d] = ''; });
-    setInputs(init);
+    setSchedule(getSchedule());
   }, []);
 
+  function setInput(day, field, value) {
+    setInputs((p) => ({ ...p, [day]: { ...p[day], [field]: value } }));
+  }
+
   function addActivity(day) {
-    const val = inputs[day]?.trim();
-    if (!val) return;
-    const updated = { ...schedule, [day]: [...(schedule[day] ?? []), val] };
-    setSchedule(updated);
-    setInputs((p) => ({ ...p, [day]: '' }));
+    const { name, time } = inputs[day];
+    if (!name.trim()) return;
+    setSchedule((p) => ({ ...p, [day]: [...(p[day] ?? []), { name: name.trim(), time }] }));
+    setInputs((p) => ({ ...p, [day]: { ...EMPTY_INPUT } }));
   }
 
   function removeActivity(day, idx) {
-    const updated = { ...schedule, [day]: schedule[day].filter((_, i) => i !== idx) };
-    setSchedule(updated);
+    setSchedule((p) => ({ ...p, [day]: p[day].filter((_, i) => i !== idx) }));
   }
 
   function handleSave() {
@@ -50,25 +58,41 @@ export default function WeeklySchedule({ onClose, showToast }) {
           {DAYS.map((day) => (
             <div key={day}>
               <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">{DAY_LABELS[day]}</h3>
+
               <div className="flex flex-wrap gap-1 mb-1">
                 {(schedule[day] ?? []).map((act, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full"
+                    className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full"
                   >
-                    {act}
-                    <button onClick={() => removeActivity(day, i)} className="text-green-400 hover:text-red-500">×</button>
+                    {act.name}
+                    {act.time && (
+                      <span className="text-green-500 font-medium">{fmt12(act.time)}</span>
+                    )}
+                    <button
+                      onClick={() => removeActivity(day, i)}
+                      className="text-green-400 hover:text-red-500 ml-0.5"
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
+
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={inputs[day] ?? ''}
-                  onChange={(e) => setInputs((p) => ({ ...p, [day]: e.target.value }))}
+                  value={inputs[day].name}
+                  onChange={(e) => setInput(day, 'name', e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addActivity(day)}
-                  placeholder="Add activity…"
+                  placeholder="Activity…"
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <input
+                  type="time"
+                  value={inputs[day].time}
+                  onChange={(e) => setInput(day, 'time', e.target.value)}
+                  className="w-28 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <button
                   onClick={() => addActivity(day)}
