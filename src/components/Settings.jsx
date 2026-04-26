@@ -83,12 +83,6 @@ export default function Settings({ showToast }) {
           </Field>
         </Section>
 
-        <Section title="API Keys">
-          <p className="text-xs text-gray-500">
-            Both the USDA and Claude (Anthropic) API keys are configured server-side in Vercel — no keys needed here.
-          </p>
-        </Section>
-
         <button
           type="submit"
           className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl"
